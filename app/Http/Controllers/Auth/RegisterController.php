@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\User;
+use App\Http\Resources\UserResource;
 
 class RegisterController extends Controller
 {
@@ -31,6 +32,22 @@ class RegisterController extends Controller
             'password' => bcrypt($request->password)
         ]);
 
-        return $user;
+        if (! $token = auth()->attempt($request->only(['email','password']))) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return (new UserResource($request->user()))
+        ->additional([
+            'meta' => $this->respondWithToken($token),
+        ]); 
+    }
+
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
     }
 }

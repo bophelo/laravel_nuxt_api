@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 
 class LoginController extends Controller
 {
@@ -25,7 +26,10 @@ class LoginController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return $this->respondWithToken($token);
+        return (new UserResource($request->user()))
+        ->additional([
+            'meta' => $this->respondWithToken($token),
+        ]); 
     }
 
     /**
